@@ -1,6 +1,7 @@
 package vista;
 
 import controladores.PedidoController;
+import dao.PedidoDAO;
 import modelo.Pedido;
 
 import javax.swing.*;
@@ -11,6 +12,7 @@ import java.util.List;
 public class VentanaListaPedidos extends JFrame {
 
     private PedidoController pedidoController;
+    private PedidoDAO pedidoDAO;
 
     private DefaultTableModel modeloTabla;
     private JTable tablaPedidos;
@@ -18,6 +20,7 @@ public class VentanaListaPedidos extends JFrame {
     public VentanaListaPedidos(PedidoController pedidoController) {
 
         this.pedidoController = pedidoController;
+        this.pedidoDAO = new PedidoDAO();
 
         setTitle("Lista de Pedidos");
         setSize(800, 350);
@@ -57,7 +60,7 @@ public class VentanaListaPedidos extends JFrame {
         modeloTabla.setRowCount(0);
 
         List<Pedido> pedidos =
-                pedidoController.obtenerPedidos();
+                pedidoDAO.listarTodos();
 
         for (Pedido pedido : pedidos) {
 

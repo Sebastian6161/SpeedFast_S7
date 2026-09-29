@@ -1,6 +1,7 @@
 package vista;
 
 import controladores.PedidoController;
+import dao.PedidoDAO;
 import modelo.Pedido;
 
 import javax.swing.*;
@@ -9,6 +10,7 @@ import java.awt.*;
 public class VentanaRegistroPedido extends JFrame {
 
     private PedidoController pedidoController;
+    private PedidoDAO pedidoDAO;
 
     private JTextField campoId;
     private JTextField campoDireccion;
@@ -17,6 +19,7 @@ public class VentanaRegistroPedido extends JFrame {
     public VentanaRegistroPedido(PedidoController pedidoController) {
 
         this.pedidoController = pedidoController;
+        this.pedidoDAO = new PedidoDAO();
 
         setTitle("Registrar Pedido");
         setSize(450, 280);
@@ -100,13 +103,29 @@ public class VentanaRegistroPedido extends JFrame {
         Pedido pedido =
                 new Pedido(id, direccion, tipo);
 
-        boolean agregado = pedidoController.agregarPedido(pedido);
+        boolean agregado =
+                pedidoController.agregarPedido(pedido);
 
         if (!agregado) {
+
             JOptionPane.showMessageDialog(
                     this,
                     "Ya existe un pedido con ese ID."
             );
+
+            return;
+        }
+
+        boolean guardadoBD =
+                pedidoDAO.guardar(pedido);
+
+        if (!guardadoBD) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se pudo guardar el pedido en la base de datos."
+            );
+
             return;
         }
 

@@ -36,6 +36,10 @@ public class Pedido {
         return repartidor;
     }
 
+    public void setEstado(EstadoPedido estado) {
+        this.estado = estado;
+    }
+
     public void asignarRepartidor(Repartidor repartidor) {
         this.repartidor = repartidor;
         this.estado = EstadoPedido.EN_REPARTO;
