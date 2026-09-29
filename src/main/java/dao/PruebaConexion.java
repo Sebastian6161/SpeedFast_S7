@@ -1,31 +1,27 @@
 package dao;
 
-import modelo.Pedido;
+import modelo.Repartidor;
+
+import java.util.List;
 
 public class PruebaConexion {
 
     public static void main(String[] args) {
 
-        Pedido pedido =
-                new Pedido(
-                        301,
-                        "Las Condes 500",
-                        "comida"
-                );
+        RepartidorDAO repartidorDAO =
+                new RepartidorDAO();
 
-        PedidoDAO pedidoDAO =
-                new PedidoDAO();
+        List<Repartidor> repartidores =
+                repartidorDAO.listarTodos();
 
-        boolean guardado =
-                pedidoDAO.guardar(pedido);
+        System.out.println("REPARTIDORES REGISTRADOS:");
 
-        if (guardado) {
+        for (Repartidor repartidor : repartidores) {
+
             System.out.println(
-                    "Pedido guardado correctamente en MySQL."
-            );
-        } else {
-            System.out.println(
-                    "No se pudo guardar el pedido."
+                    repartidor.getId()
+                            + " - "
+                            + repartidor.getNombre()
             );
         }
     }
