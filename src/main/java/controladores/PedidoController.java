@@ -1,8 +1,13 @@
 package controladores;
 
+import dao.EntregaDAO;
+import dao.PedidoDAO;
+import modelo.Entrega;
 import modelo.Pedido;
 import modelo.Repartidor;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,21 +19,39 @@ public class PedidoController {
     private List<Repartidor> repartidores;
     private Queue<Pedido> colaPedidos;
 
+    private PedidoDAO pedidoDAO;
+    private EntregaDAO entregaDAO;
+
     public PedidoController() {
+
         pedidos = new ArrayList<>();
         colaPedidos = new LinkedList<>();
 
+        pedidoDAO = new PedidoDAO();
+        entregaDAO = new EntregaDAO();
+
         repartidores = new ArrayList<>();
-        repartidores.add(new Repartidor(1, "Carlos"));
-        repartidores.add(new Repartidor(2, "María"));
-        repartidores.add(new Repartidor(3, "Pedro"));
+
+        repartidores.add(
+                new Repartidor(1, "Carlos")
+        );
+
+        repartidores.add(
+                new Repartidor(2, "María")
+        );
+
+        repartidores.add(
+                new Repartidor(3, "Pedro")
+        );
     }
 
     public boolean agregarPedido(Pedido pedido) {
 
-        // Verifica que no exista otro pedido con el mismo ID
         for (Pedido pedidoExistente : pedidos) {
-            if (pedidoExistente.getId() == pedido.getId()) {
+
+            if (pedidoExistente.getId()
+                    == pedido.getId()) {
+
                 return false;
             }
         }
@@ -51,13 +74,19 @@ public class PedidoController {
         return colaPedidos;
     }
 
-    public void configurarRepartidores(int cantidad) {
+    public void configurarRepartidores(
+            int cantidad
+    ) {
 
         repartidores.clear();
 
         for (int i = 1; i <= cantidad; i++) {
+
             repartidores.add(
-                    new Repartidor(i, "Repartidor " + i)
+                    new Repartidor(
+                            i,
+                            "Repartidor " + i
+                    )
             );
         }
     }
@@ -68,35 +97,51 @@ public class PedidoController {
 
         while (!colaPedidos.isEmpty()) {
 
-            Pedido pedido = colaPedidos.poll();
+            Pedido pedido =
+                    colaPedidos.poll();
 
-            if (pedido != null && !repartidores.isEmpty()) {
+            if (pedido != null
+                    && !repartidores.isEmpty()) {
 
-                // Solo asigna un repartidor si el pedido todavía no tiene uno
                 if (pedido.getRepartidor() == null) {
 
                     Repartidor repartidor =
                             repartidores.get(
-                                    indexRepartidor % repartidores.size()
+                                    indexRepartidor
+                                            % repartidores.size()
                             );
 
-                    pedido.asignarRepartidor(repartidor);
+                    pedido.asignarRepartidor(
+                            repartidor
+                    );
+
                     indexRepartidor++;
                 }
 
                 pedido.entregar();
+
+                // Actualiza estado en MySQL
+                pedidoDAO.actualizarEstado(
+                        pedido
+                );
+
+                // Registra la entrega
+                registrarEntrega(pedido);
             }
         }
     }
 
-    public void procesarConInterrupcion(int limiteAntesDeInterrumpir) {
+    public void procesarConInterrupcion(
+            int limiteAntesDeInterrumpir
+    ) {
 
         int indexRepartidor = 0;
         int procesados = 0;
 
         while (!colaPedidos.isEmpty()) {
 
-            if (procesados >= limiteAntesDeInterrumpir) {
+            if (procesados
+                    >= limiteAntesDeInterrumpir) {
 
                 while (!colaPedidos.isEmpty()) {
 
@@ -104,32 +149,69 @@ public class PedidoController {
                             colaPedidos.poll();
 
                     if (pedidoInterrumpido != null) {
+
                         pedidoInterrumpido.interrumpir();
+
+                        pedidoDAO.actualizarEstado(
+                                pedidoInterrumpido
+                        );
                     }
                 }
 
                 break;
             }
 
-            Pedido pedido = colaPedidos.poll();
+            Pedido pedido =
+                    colaPedidos.poll();
 
-            if (pedido != null && !repartidores.isEmpty()) {
+            if (pedido != null
+                    && !repartidores.isEmpty()) {
 
-                // Respeta al repartidor que ya fue asignado manualmente
                 if (pedido.getRepartidor() == null) {
 
                     Repartidor repartidor =
                             repartidores.get(
-                                    indexRepartidor % repartidores.size()
+                                    indexRepartidor
+                                            % repartidores.size()
                             );
 
-                    pedido.asignarRepartidor(repartidor);
+                    pedido.asignarRepartidor(
+                            repartidor
+                    );
+
                     indexRepartidor++;
                 }
 
                 pedido.entregar();
+
+                pedidoDAO.actualizarEstado(
+                        pedido
+                );
+
+                registrarEntrega(pedido);
+
                 procesados++;
             }
         }
+    }
+
+    private void registrarEntrega(
+            Pedido pedido
+    ) {
+
+        if (pedido.getRepartidor() == null) {
+            return;
+        }
+
+        Entrega entrega =
+                new Entrega(
+                        0,
+                        pedido,
+                        pedido.getRepartidor(),
+                        LocalDate.now(),
+                        LocalTime.now()
+                );
+
+        entregaDAO.guardar(entrega);
     }
 }

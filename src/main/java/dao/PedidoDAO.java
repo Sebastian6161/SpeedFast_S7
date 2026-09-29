@@ -25,7 +25,6 @@ public class PedidoDAO {
         try {
 
             conexion = ConexionBD.conectar();
-
             statement = conexion.prepareStatement(sql);
 
             statement.setInt(1, pedido.getId());
@@ -57,8 +56,68 @@ public class PedidoDAO {
                 }
 
             } catch (SQLException e) {
-
                 System.out.println("Error al cerrar los recursos.");
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    public boolean actualizarEstado(Pedido pedido) {
+
+        String sql =
+                "UPDATE pedido SET estado = ? WHERE id = ?";
+
+        Connection conexion = null;
+        PreparedStatement statement = null;
+
+        try {
+
+            conexion = ConexionBD.conectar();
+            statement = conexion.prepareStatement(sql);
+
+            statement.setString(
+                    1,
+                    pedido.getEstado().name()
+            );
+
+            statement.setInt(
+                    2,
+                    pedido.getId()
+            );
+
+            int filasActualizadas =
+                    statement.executeUpdate();
+
+            return filasActualizadas > 0;
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Error al actualizar el estado del pedido."
+            );
+
+            System.out.println(e.getMessage());
+
+            return false;
+
+        } finally {
+
+            try {
+
+                if (statement != null) {
+                    statement.close();
+                }
+
+                if (conexion != null) {
+                    conexion.close();
+                }
+
+            } catch (SQLException e) {
+
+                System.out.println(
+                        "Error al cerrar los recursos."
+                );
+
                 System.out.println(e.getMessage());
             }
         }
@@ -70,7 +129,8 @@ public class PedidoDAO {
 
         String sql =
                 "SELECT p.id, p.direccion, p.tipo, p.estado, " +
-                        "r.id AS repartidor_id, r.nombre AS repartidor_nombre " +
+                        "r.id AS repartidor_id, " +
+                        "r.nombre AS repartidor_nombre " +
                         "FROM pedido p " +
                         "LEFT JOIN entrega e ON p.id = e.id_pedido " +
                         "LEFT JOIN repartidor r ON e.id_repartidor = r.id " +
@@ -83,17 +143,22 @@ public class PedidoDAO {
         try {
 
             conexion = ConexionBD.conectar();
-
             statement = conexion.prepareStatement(sql);
-
             resultado = statement.executeQuery();
 
             while (resultado.next()) {
 
-                int id = resultado.getInt("id");
-                String direccion = resultado.getString("direccion");
-                String tipo = resultado.getString("tipo");
-                String estadoTexto = resultado.getString("estado");
+                int id =
+                        resultado.getInt("id");
+
+                String direccion =
+                        resultado.getString("direccion");
+
+                String tipo =
+                        resultado.getString("tipo");
+
+                String estadoTexto =
+                        resultado.getString("estado");
 
                 Pedido pedido =
                         new Pedido(id, direccion, tipo);
@@ -107,7 +172,9 @@ public class PedidoDAO {
                         resultado.getInt("repartidor_id");
 
                 String repartidorNombre =
-                        resultado.getString("repartidor_nombre");
+                        resultado.getString(
+                                "repartidor_nombre"
+                        );
 
                 if (repartidorNombre != null) {
 
@@ -119,7 +186,7 @@ public class PedidoDAO {
 
                     pedido.asignarRepartidor(repartidor);
 
-                    // Restauramos el estado real guardado en MySQL
+                    // Conserva el estado real almacenado
                     pedido.setEstado(estado);
                 }
 
@@ -128,7 +195,10 @@ public class PedidoDAO {
 
         } catch (SQLException e) {
 
-            System.out.println("Error al listar los pedidos.");
+            System.out.println(
+                    "Error al listar los pedidos."
+            );
+
             System.out.println(e.getMessage());
 
         } finally {
@@ -149,7 +219,10 @@ public class PedidoDAO {
 
             } catch (SQLException e) {
 
-                System.out.println("Error al cerrar los recursos.");
+                System.out.println(
+                        "Error al cerrar los recursos."
+                );
+
                 System.out.println(e.getMessage());
             }
         }

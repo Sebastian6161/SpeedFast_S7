@@ -16,59 +16,74 @@ public class VentanaRegistroPedido extends JFrame {
     private JTextField campoDireccion;
     private JComboBox<String> comboTipo;
 
-    public VentanaRegistroPedido(PedidoController pedidoController) {
+    public VentanaRegistroPedido(
+            PedidoController pedidoController
+    ) {
 
         this.pedidoController = pedidoController;
         this.pedidoDAO = new PedidoDAO();
 
         setTitle("Registrar Pedido");
         setSize(450, 280);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(
+                JFrame.DISPOSE_ON_CLOSE
+        );
         setLocationRelativeTo(null);
 
-        setLayout(new GridLayout(4, 2, 10, 10));
+        setLayout(
+                new GridLayout(4, 2, 10, 10)
+        );
 
-        JLabel etiquetaId = new JLabel("ID:");
-        JLabel etiquetaDireccion = new JLabel("Dirección:");
-        JLabel etiquetaTipo = new JLabel("Tipo:");
+        add(new JLabel("ID:"));
 
         campoId = new JTextField();
-        campoDireccion = new JTextField();
-
-        comboTipo = new JComboBox<>();
-
-        comboTipo.addItem("comida");
-        comboTipo.addItem("encomienda");
-        comboTipo.addItem("express");
-
-        JButton botonGuardar = new JButton("Guardar");
-
-        add(etiquetaId);
         add(campoId);
 
-        add(etiquetaDireccion);
+        add(new JLabel("Dirección:"));
+
+        campoDireccion = new JTextField();
         add(campoDireccion);
 
-        add(etiquetaTipo);
+        add(new JLabel("Tipo:"));
+
+        comboTipo = new JComboBox<>(
+                new String[]{
+                        "comida",
+                        "encomienda",
+                        "express"
+                }
+        );
+
         add(comboTipo);
 
-        add(new JLabel());
+        JButton botonGuardar =
+                new JButton("Guardar Pedido");
+
+        add(new JLabel(""));
         add(botonGuardar);
 
-        botonGuardar.addActionListener(e -> guardarPedido());
+        botonGuardar.addActionListener(
+                e -> guardarPedido()
+        );
     }
 
     private void guardarPedido() {
 
-        String idTexto = campoId.getText().trim();
-        String direccion = campoDireccion.getText().trim();
-        String tipo = comboTipo.getSelectedItem().toString();
+        String idTexto =
+                campoId.getText().trim();
 
-        if (idTexto.isEmpty() || direccion.isEmpty()) {
+        String direccion =
+                campoDireccion.getText().trim();
+
+        String tipo =
+                (String) comboTipo.getSelectedItem();
+
+        if (idTexto.isEmpty()
+                || direccion.isEmpty()) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Debe completar todos los campos."
+                    "Complete todos los campos."
             );
 
             return;
@@ -94,14 +109,37 @@ public class VentanaRegistroPedido extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "El ID debe ser mayor que 0."
+                    "El ID debe ser mayor que cero."
             );
 
             return;
         }
 
         Pedido pedido =
-                new Pedido(id, direccion, tipo);
+                new Pedido(
+                        id,
+                        direccion,
+                        tipo
+                );
+
+        /*
+         * Primero guardamos en MySQL.
+         * Si MySQL rechaza el registro,
+         * no lo agregamos a memoria.
+         */
+        boolean guardadoBD =
+                pedidoDAO.guardar(pedido);
+
+        if (!guardadoBD) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se pudo guardar el pedido.\n" +
+                            "Verifique que el ID no exista."
+            );
+
+            return;
+        }
 
         boolean agregado =
                 pedidoController.agregarPedido(pedido);
@@ -110,31 +148,19 @@ public class VentanaRegistroPedido extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Ya existe un pedido con ese ID."
+                    "El pedido fue guardado en la base de datos."
             );
 
-            return;
-        }
-
-        boolean guardadoBD =
-                pedidoDAO.guardar(pedido);
-
-        if (!guardadoBD) {
+        } else {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "No se pudo guardar el pedido en la base de datos."
+                    "Pedido registrado correctamente."
             );
-
-            return;
         }
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Pedido registrado correctamente."
-        );
 
         campoId.setText("");
         campoDireccion.setText("");
+        comboTipo.setSelectedIndex(0);
     }
 }
