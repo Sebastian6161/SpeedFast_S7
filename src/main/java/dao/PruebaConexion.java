@@ -1,23 +1,32 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.SQLException;
+import modelo.Pedido;
 
 public class PruebaConexion {
 
     public static void main(String[] args) {
 
-        try {
-            Connection conexion = ConexionBD.conectar();
+        Pedido pedido =
+                new Pedido(
+                        301,
+                        "Las Condes 500",
+                        "comida"
+                );
 
-            if (conexion != null) {
-                System.out.println("Conexion exitosa a speedfast_db.");
-                conexion.close();
-            }
+        PedidoDAO pedidoDAO =
+                new PedidoDAO();
 
-        } catch (SQLException e) {
-            System.out.println("Error al conectar con la base de datos.");
-            System.out.println(e.getMessage());
+        boolean guardado =
+                pedidoDAO.guardar(pedido);
+
+        if (guardado) {
+            System.out.println(
+                    "Pedido guardado correctamente en MySQL."
+            );
+        } else {
+            System.out.println(
+                    "No se pudo guardar el pedido."
+            );
         }
     }
 }
