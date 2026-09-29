@@ -100,7 +100,15 @@ public class VentanaRegistroPedido extends JFrame {
         Pedido pedido =
                 new Pedido(id, direccion, tipo);
 
-        pedidoController.agregarPedido(pedido);
+        boolean agregado = pedidoController.agregarPedido(pedido);
+
+        if (!agregado) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Ya existe un pedido con ese ID."
+            );
+            return;
+        }
 
         JOptionPane.showMessageDialog(
                 this,

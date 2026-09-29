@@ -25,9 +25,16 @@ public class PedidoController {
         repartidores.add(new Repartidor(3, "Pedro"));
     }
 
-    public void agregarPedido(Pedido pedido) {
+    public boolean agregarPedido(Pedido pedido) {
+        for (Pedido pedidoExistente : pedidos) {
+            if (pedidoExistente.getId() == pedido.getId()) {
+                return false;
+            }
+        }
+
         pedidos.add(pedido);
         colaPedidos.add(pedido);
+        return true;
     }
 
     public List<Pedido> obtenerPedidos() {
